@@ -1,6 +1,6 @@
 import mysql.connector
 
-DB_HOST = "172.31.25.35"
+DB_HOST = "172.31.25.35" # IP PRIVADA DE LA MÁQUINA VIRTUAL
 DB_PORT = 8005
 DB_USER = "root"
 DB_PASSWORD = "utecmysql"
