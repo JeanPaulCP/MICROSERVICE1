@@ -22,14 +22,24 @@ def crear_usuario(usuario: schemas.UsuarioCreate):
             id_rol = cursor.lastrowid
         roles_ids.append({"id_rol": id_rol, "nombre_rol": rol.nombre_rol})
 
-    # Insertar usuario
+    # Insertar usuario con n_resena y n_prestamo
     cursor.execute(
-        "INSERT INTO usuarios (nombre, apellido, correo, fecha_registro) VALUES (%s, %s, %s, %s)",
-        (usuario.nombre, usuario.apellido, usuario.correo, usuario.fecha_registro)
+        """
+        INSERT INTO usuarios (nombre, apellido, correo, fecha_registro, n_resena, n_prestamo)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (
+            usuario.nombre,
+            usuario.apellido,
+            usuario.correo,
+            usuario.fecha_registro,
+            usuario.n_resena,
+            usuario.n_prestamo
+        )
     )
     id_usuario = cursor.lastrowid
 
-    # Insertar en tabla intermedia
+    # Insertar en tabla intermedia usuario_rol
     for rol in roles_ids:
         cursor.execute("INSERT INTO usuario_rol (id_usuario, id_rol) VALUES (%s, %s)", (id_usuario, rol["id_rol"]))
 
@@ -42,6 +52,8 @@ def crear_usuario(usuario: schemas.UsuarioCreate):
         apellido=usuario.apellido,
         correo=usuario.correo,
         fecha_registro=usuario.fecha_registro,
+        n_resena=usuario.n_resena,
+        n_prestamo=usuario.n_prestamo,
         roles=[schemas.Rol(**rol) for rol in roles_ids]
     )
 
@@ -94,27 +106,35 @@ def actualizar_usuario(id_usuario: int, usuario_actualizado: schemas.UsuarioCrea
     conn = database.get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Verificar existencia
+    # Verificar existencia del usuario
     cursor.execute("SELECT * FROM usuarios WHERE id_usuario = %s", (id_usuario,))
     if not cursor.fetchone():
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # Actualizar campos
+    # Actualizar todos los campos del usuario (incluyendo los nuevos)
     cursor.execute("""
-        UPDATE usuarios SET nombre = %s, apellido = %s, correo = %s, fecha_registro = %s
+        UPDATE usuarios
+        SET nombre = %s,
+            apellido = %s,
+            correo = %s,
+            fecha_registro = %s,
+            n_resena = %s,
+            n_prestamo = %s
         WHERE id_usuario = %s
     """, (
         usuario_actualizado.nombre,
         usuario_actualizado.apellido,
         usuario_actualizado.correo,
         usuario_actualizado.fecha_registro,
+        usuario_actualizado.n_resena,
+        usuario_actualizado.n_prestamo,
         id_usuario
     ))
 
-    # Borrar roles antiguos
+    # Borrar roles anteriores
     cursor.execute("DELETE FROM usuario_rol WHERE id_usuario = %s", (id_usuario,))
 
-    # Insertar o crear nuevos roles
+    # Insertar nuevos roles (o crearlos si no existen)
     roles_actualizados = []
     for rol in usuario_actualizado.roles:
         cursor.execute("SELECT id_rol FROM roles WHERE nombre_rol = %s", (rol.nombre_rol,))
@@ -137,6 +157,8 @@ def actualizar_usuario(id_usuario: int, usuario_actualizado: schemas.UsuarioCrea
         apellido=usuario_actualizado.apellido,
         correo=usuario_actualizado.correo,
         fecha_registro=usuario_actualizado.fecha_registro,
+        n_resena=usuario_actualizado.n_resena,
+        n_prestamo=usuario_actualizado.n_prestamo,
         roles=[schemas.Rol(**rol) for rol in roles_actualizados]
     )
 
