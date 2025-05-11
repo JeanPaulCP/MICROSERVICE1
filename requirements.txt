@@ -1,7 +1,5 @@
 fastapi[standard]
 uvicorn[standard]
-sqlalchemy
-pymysql
 pydantic
 python-dotenv
-cryptography
+mysql-connector-python
