@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List
 from datetime import date
-
 from pydantic import field_validator
 
 class RolBase(BaseModel):
@@ -10,7 +9,7 @@ class RolBase(BaseModel):
 class Rol(RolBase):
     id_rol: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UsuarioBase(BaseModel):
     nombre: str
@@ -21,7 +20,8 @@ class UsuarioBase(BaseModel):
     n_prestamo: int = 0
 
     @field_validator("n_prestamo")
-    def validar_n_prestamo(self, value):
+    @classmethod
+    def validar_n_prestamo(cls, value):
         if value > 1:
             raise ValueError("El usuario no puede tener más de 1 préstamo activo.")
         return value
@@ -33,4 +33,4 @@ class Usuario(UsuarioBase):
     id_usuario: int
     roles: List[Rol]
     class Config:
-        orm_mode = True
+        from_attributes = True
